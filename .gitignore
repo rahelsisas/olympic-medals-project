@@ -34,6 +34,7 @@ Thumbs.db
 
 # VS Code
 .vscode/
+.idea
 
 # Data files (IMPORTANT)
 # Ignore raw and large data files

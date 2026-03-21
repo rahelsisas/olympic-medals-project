@@ -1,5 +1,6 @@
 import requests
 import pandas as pd
+import os
 
 BASE_URL = "https://api.worldbank.org/v2/country/all/indicator/{indicator}"
 
@@ -19,7 +20,7 @@ def fetch_world_bank_data(indicator, name):
     for entry in data[1]:
         records.append({
             "country": entry["country"]["value"],
-            "country_code": entry["country"]["id"],
+            "country_code": entry["countryiso3code"],
             "year": entry["date"],
             name: entry["value"]
         })
@@ -39,8 +40,9 @@ if __name__ == "__main__":
     area = fetch_world_bank_data("AG.SRF.TOTL.K2", "surface_area")
 
     # Save raw data
-    gdp.to_csv("data/raw/gdp.csv", index=False)
-    population.to_csv("data/raw/population.csv", index=False)
-    area.to_csv("data/raw/surface_area.csv", index=False)
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+    DATA_PATH = os.path.join(BASE_DIR, "data", "raw")
 
-    print("World Bank data saved successfully!")
+    gdp.to_csv(os.path.join(DATA_PATH, "gdp.csv"), index=False)
+    population.to_csv(os.path.join(DATA_PATH, "population.csv"), index=False)
+    area.to_csv(os.path.join(DATA_PATH, "surface_area.csv"), index=False)
