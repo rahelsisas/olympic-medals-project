@@ -12,3 +12,26 @@ This project looks into whether wealthier countries, larger countries, or host c
 - Data engineering pipeline
 - Analysis and modeling
 - Visualization and reporting
+
+## Project Structure
+```
+olympic-medals-project/
+│
+├── data/
+│   ├── raw/
+│   └── processed/
+│
+├── notebooks/
+│
+├── src/
+│   ├── extract/
+│   ├── transform/
+│   └── load/
+│
+├── sql/
+│
+├── docs/
+│
+├── README.md
+└── .gitignore
+```
