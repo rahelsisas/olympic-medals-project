@@ -12,8 +12,12 @@ def fetch_world_bank_data(indicator, name):
         "per_page": 20000
     }
 
-    response = requests.get(url, params=params)
+    response = requests.get(url, params=params, timeout=30)
+    response.raise_for_status()
     data = response.json()
+
+    if len(data) < 2 or data[1] is None:
+        raise ValueError(f"Unexpected API response for indicator {indicator}")
 
     records = []
 

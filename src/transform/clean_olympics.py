@@ -20,10 +20,10 @@ df = df[df["Medal"] != "No medal"]
 
 # Rename columns
 df = df.rename(columns={
-    "Year": "year",
-    "Team": "country",
-    "NOC": "country_code",
-    "Medal": "medal"
+   "Year": "year",
+   "Team": "country",
+   "NOC": "country_code",
+   "Medal": "medal"
 })
 
 # Convert medals into numeric columns
@@ -36,9 +36,9 @@ df = df[~df["country"].str.contains("/")]
 
 # Remove weird team names
 invalid_teams = [
-    "Mixed team",
-    "Refugee Olympic Team",
-    "A North American Team"
+   "Mixed team",
+   "Refugee Olympic Team",
+   "A North American Team"
 ]
 
 df = df[~df["country"].isin(invalid_teams)]
@@ -48,49 +48,44 @@ df = df[df["country_code"].str.len() == 3]
 
 # Aggregate to country-year level
 agg_df = df.groupby(["year", "country_code"]).agg({
-    "gold": "sum",
-    "silver": "sum",
-    "bronze": "sum"
+   "gold": "sum",
+   "silver": "sum",
+   "bronze": "sum"
 }).reset_index()
 
 agg_df["medals_total"] = (
-    agg_df["gold"] + agg_df["silver"] + agg_df["bronze"]
+   agg_df["gold"] + agg_df["silver"] + agg_df["bronze"]
 )
 
 # Map country names
 noc_to_country = {
-    "USA": "United States",
-    "GBR": "United Kingdom",
-    "GER": "Germany",
-    "FRA": "France",
-    "AUS": "Australia",
-    "AUT": "Austria",
-    "GRE": "Greece",
-    "DEN": "Denmark",
-    "HUN": "Hungary",
-    "SUI": "Switzerland"
+   "USA": "United States",
+   "GBR": "United Kingdom",
+   "GER": "Germany",
+   "FRA": "France",
+   "AUS": "Australia",
+   "AUT": "Austria",
+   "GRE": "Greece",
+   "DEN": "Denmark",
+   "HUN": "Hungary",
+   "SUI": "Switzerland"
 }
 
 agg_df["country"] = agg_df["country_code"].map(noc_to_country)
 agg_df["country"] = agg_df["country"].fillna(agg_df["country_code"])
 
 agg_df = agg_df[[
-    "year",
-    "country_code",
-    "country",
-    "gold",
-    "silver",
-    "bronze",
-    "medals_total"
+   "year",
+   "country_code",
+   "country",
+   "gold",
+   "silver",
+   "bronze",
+   "medals_total"
 ]]
 
 # Only taking data from 1960 onwards as it is more reliable
-df = df[df["year"] >= 1960]
-
-# Total medals
-agg_df["medals_total"] = (
-    agg_df["gold"] + agg_df["silver"] + agg_df["bronze"]
-)
+agg_df = agg_df[agg_df["year"] >= 1960]
 
 # Save cleaned dataset
 agg_df.to_csv(os.path.join(OUTPUT_PATH, "olympics_cleaned.csv"), index=False)
