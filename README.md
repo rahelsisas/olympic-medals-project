@@ -56,6 +56,23 @@ The project follows a standard ETL pipeline:
 
 ---
 
+## Data Analytics & Business Intelligence
+(Following the ETL process, the processed data is analyzed to answer our core research question)
+
+### 1. SQL Integration
+- Extracting top 10 most successful Olympic nations directly from the SQLite database.
+
+### 2. PySpark Processing
+- Distributed computing to track global medal inflation over time.
+
+### 3. Macroeconomic Correlation
+- Generating heatmaps to analyze the relationship between Log GDP, Log Population, and Total Medals.
+
+### 4. Host Country Effect
+- Visualizing the significant spike in average medals won when a nation hosts the Olympics.
+
+---
+
 ## Key Data Engineering Challenges
 
 ### 1. Country Code Mismatch
@@ -96,6 +113,7 @@ The project follows a standard ETL pipeline:
 ## Technologies Used
 
 - Python (pandas, requests)
+- Matplotlib, Seaborn
 - PySpark
 - SQLite
 - Git & GitHub
@@ -104,8 +122,16 @@ The project follows a standard ETL pipeline:
 
 ## How to Run
 
-1. Install dependencies:
-```python
-pip install -r requirements.txt
-```
+1. **Install dependencies:**
+   ```bash
+   pip install -r requirements.txt
+
+2. **Execute the ETL Pipeline:** Run the following command to extract data from APIs, clean/merge the datasets, and generate the SQLite database (data/processed/olympics.db) and CSV files.
+   ```bash
+   python src/run_pipeline.py
+
+4. **Run the Analysis & Visualizations:** Open the notebooks/olympic_analysis.ipynb file in Jupyter Notebook or VS Code. Click "Restart & Run All" to execute the SQL queries, PySpark aggregations, and view the final macroeconomic correlation graphs.
+
+
+
 
