@@ -7,104 +7,98 @@ import sqlite3
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 PROCESSED_PATH = os.path.join(BASE_DIR, "data", "processed")
 
-olympics = pd.read_csv(os.path.join(PROCESSED_PATH, "olympics_cleaned.csv"))
-
 # Loading World Bank data
 RAW_PATH = os.path.join(BASE_DIR, "data", "raw")
 
-gdp = pd.read_csv(os.path.join(RAW_PATH, "gdp.csv"))
-population = pd.read_csv(os.path.join(RAW_PATH, "population.csv"))
-area = pd.read_csv(os.path.join(RAW_PATH, "surface_area.csv"))
+# Verify all input files exist before loading
+required_files = {
+    "olympics_cleaned": os.path.join(PROCESSED_PATH, "olympics_cleaned.csv"),
+    "gdp": os.path.join(RAW_PATH, "gdp.csv"),
+    "population": os.path.join(RAW_PATH, "population.csv"),
+    "surface_area": os.path.join(RAW_PATH, "surface_area.csv"),
+}
+for name, path in required_files.items():
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"Required file '{name}' not found at: {path}")
 
-# Converting year to int
-gdp["year"] = gdp["year"].astype(int)
-population["year"] = population["year"].astype(int)
-area["year"] = area["year"].astype(int)
+olympics = pd.read_csv(required_files["olympics_cleaned"])
+gdp = pd.read_csv(required_files["gdp"])
+population = pd.read_csv(required_files["population"])
+area = pd.read_csv(required_files["surface_area"])
+print(f"Loaded {len(olympics)} Olympic records.")
 
-# Matching the different country codes of the two datasets
+for df_wb in [gdp, population, area]:
+    df_wb["year"] = pd.to_numeric(df_wb["year"], errors="coerce")
+    df_wb.dropna(subset=["year"], inplace=True)
+    df_wb["year"] = df_wb["year"].astype(int)
+
 # NOC codes (Olympics) → ISO3 codes (World Bank)
-# Note: historical nations (URS, GDR, TCH, YUG) map to their modern successors.
-# World Bank data for those periods may be sparse, so rows may still be dropped by dropna.
+# Historical nations (URS, GDR, TCH, YUG) map to their modern successors;
+# World Bank data for those periods is sparse so rows may still be dropped later.
 noc_to_iso = {
-   # NOC differs from ISO
-   "GER": "DEU",
-   "SUI": "CHE",
-   "DEN": "DNK",
-   "GRE": "GRC",
-   "NED": "NLD",
-   "POR": "PRT",
-   "RSA": "ZAF",
-   "SLO": "SVN",
-   "CRO": "HRV",
-   "LAT": "LVA",
-   "LTU": "LTU",
-   "EST": "EST",
-   "MGL": "MNG",
-   "PHI": "PHL",
-   "TRI": "TTO",
-   "INA": "IDN",
-   "MAS": "MYS",
-   "SIN": "SGP",
-   "TPE": "TWN",
-   "VIE": "VNM",
-   "ZIM": "ZWE",
-   "ZAM": "ZMB",
-   # Historical nations → modern successors (best effort)
-   "URS": "RUS",  # Soviet Union → Russia
-   "GDR": "DEU",  # East Germany → Germany
-   "TCH": "CZE",  # Czechoslovakia → Czech Republic
-   "YUG": "SRB",  # Yugoslavia → Serbia
-   "SCG": "SRB",  # Serbia and Montenegro → Serbia
-   "EUA": "DEU",  # United Team of Germany (1956–1964) → Germany
-   "BOH": "CZE",  # Bohemia → Czech Republic
-   # Already ISO — listed explicitly for clarity
-   "AUT": "AUT",
-   "FRA": "FRA",
-   "USA": "USA",
-   "GBR": "GBR",
-   "ESP": "ESP",
-   "ITA": "ITA",
-   "CAN": "CAN",
-   "AUS": "AUS",
-   "BEL": "BEL",
-   "NOR": "NOR",
-   "SWE": "SWE",
-   "FIN": "FIN",
-   "JPN": "JPN",
-   "CHN": "CHN",
-   "BRA": "BRA",
-   "KOR": "KOR",
-   "MEX": "MEX",
-   "ARG": "ARG",
-   "CUB": "CUB",
-   "POL": "POL",
-   "HUN": "HUN",
-   "ROU": "ROU",
-   "BUL": "BGR",
-   "TUR": "TUR",
-   "IRI": "IRN",
-   "KAZ": "KAZ",
-   "UKR": "UKR",
-   "NZL": "NZL",
-   "NGR": "NGA",
-   "ETH": "ETH",
-   "KEN": "KEN",
-   "EGY": "EGY",
-   "MAR": "MAR",
-   "COL": "COL",
-   "VEN": "VEN",
-   "CHI": "CHL",
-   "PER": "PER",
-   "ECU": "ECU",
-   "URU": "URY",
-   "PAR": "PRY",
+    "GER": "DEU",
+    "SUI": "CHE",
+    "DEN": "DNK",
+    "GRE": "GRC",
+    "NED": "NLD",
+    "POR": "PRT",
+    "RSA": "ZAF",
+    "SLO": "SVN",
+    "CRO": "HRV",
+    "LAT": "LVA",
+    "MGL": "MNG",
+    "PHI": "PHL",
+    "TRI": "TTO",
+    "INA": "IDN",
+    "MAS": "MYS",
+    "SIN": "SGP",
+    "TPE": "TWN",
+    "VIE": "VNM",
+    "ZIM": "ZWE",
+    "ZAM": "ZMB",
+    "IRI": "IRN",
+    "NGR": "NGA",
+    "CHI": "CHL",
+    "URU": "URY",
+    "PAR": "PRY",
+    "BUL": "BGR",
+    "GUA": "GTM",
+    "HON": "HND",
+    "ESA": "SLV",
+    "CRC": "CRI",
+    "NCA": "NIC",
+    "DOM": "DOM",
+    "JAM": "JAM",
+    "BAH": "BHS",
+    "PUR": "PRI",
+    "HAI": "HTI",
+    "FIJ": "FJI",
+    "PNG": "PNG",
+    "HKG": "HKG",
+    "ISL": "ISL",
+    "LUX": "LUX",
+    "IRL": "IRL",
+    "ALG": "DZA",
+    "TUN": "TUN",
+    "CIV": "CIV",
+    "CMR": "CMR",
+    "GHA": "GHA",
+    "SEN": "SEN",
+    "TAN": "TZA",
+    "UGA": "UGA",
+    "NIG": "NER",
+    # Historical nations → modern successors (best effort)
+    "URS": "RUS",   # Soviet Union → Russia
+    "GDR": "DEU",   # East Germany → Germany
+    "TCH": "CZE",   # Czechoslovakia → Czech Republic
+    "YUG": "SRB",   # Yugoslavia → Serbia
+    "SCG": "SRB",   # Serbia and Montenegro → Serbia
+    "EUA": "DEU",   # United Team of Germany → Germany
+    "BOH": "CZE",   # Bohemia → Czech Republic
 }
 
 # Creating iso_code column
-olympics["iso_code"] = olympics["country_code"].map(noc_to_iso)
-
-# Fallback for already matching ones
-olympics["iso_code"] = olympics["iso_code"].fillna(olympics["country_code"])
+olympics["iso_code"] = olympics["country_code"].map(noc_to_iso).fillna(olympics["country_code"])
 
 # Removing unnecessary columns
 gdp = gdp.drop(columns=["country"])
@@ -117,25 +111,31 @@ wb = wb.merge(area, on=["country_code", "year"], how="left")
 
 # Merging with Olympics Dataset
 final_df = olympics.merge(
-   wb,
-   left_on=["iso_code", "year"],
-   right_on=["country_code", "year"],
-   how="left"
+    wb,
+    left_on=["iso_code", "year"],
+    right_on=["country_code", "year"],
+    how="left"
 )
 
 # Removing key rows with missing data
+before = len(final_df)
 final_df = final_df.dropna(subset=["gdp", "population"])
+print(f"Dropped {before - len(final_df)} rows missing GDP or population data.")
 
 # Removing impossible values
-final_df = final_df[final_df["population"] > 0]
-final_df = final_df[final_df["gdp"] > 0]
+before = len(final_df)
+final_df = final_df[(final_df["population"] > 0) & (final_df["gdp"] > 0)]
+print(f"Dropped {before - len(final_df)} rows with non-positive GDP or population.")
 
-# Removing tiny countries
+before = len(final_df)
 final_df = final_df[final_df["population"] > 100_000]
+print(f"Dropped {before - len(final_df)} rows for tiny countries (population ≤ 100k).")
 
-# Dropping duplicate columns
-final_df = final_df.drop(columns=["country_code_y"])
-final_df = final_df.rename(columns={"country_code_x": "country_code"})
+# Clean up duplicate country_code columns produced by the merge
+if "country_code_y" in final_df.columns:
+    final_df = final_df.drop(columns=["country_code_y"])
+if "country_code_x" in final_df.columns:
+    final_df = final_df.rename(columns={"country_code_x": "country_code"})
 
 # Taking results after 1960 (due to data availability)
 final_df = final_df[final_df["year"] >= 1960]
@@ -146,45 +146,44 @@ final_df["log_population"] = np.log(final_df["population"])
 
 # GDP per capita
 final_df["gdp_per_capita"] = final_df["gdp"] / final_df["population"]
-
 # Medals per million people
-final_df["medals_per_million"] = (
-   final_df["medals_total"] / final_df["population"] * 1_000_000
-)
+final_df["medals_per_million"] = final_df["medals_total"] / final_df["population"] * 1_000_000
 
 # Creating a host dataset
 host_data = [
-   (1960, "ITA"),  # Rome
-   (1964, "JPN"),  # Tokyo
-   (1968, "MEX"),  # Mexico City
-   (1972, "DEU"),  # Munich
-   (1976, "CAN"),  # Montreal
-   (1980, "RUS"),  # Moscow (USSR → RUS approx)
-   (1984, "USA"),  # Los Angeles
-   (1988, "KOR"),  # Seoul
-   (1992, "ESP"),  # Barcelona
-   (1996, "USA"),  # Atlanta
-   (2000, "AUS"),  # Sydney
-   (2004, "GRC"),  # Athens
-   (2008, "CHN"),  # Beijing
-   (2012, "GBR"),  # London
-   (2016, "BRA"),  # Rio
-   (2020, "JPN")   # Tokyo (held in 2021)
+    (1960, "ITA"),  # Rome
+    (1964, "JPN"),  # Tokyo
+    (1968, "MEX"),  # Mexico City
+    (1972, "DEU"),  # Munich
+    (1976, "CAN"),  # Montreal
+    (1980, "RUS"),  # Moscow (USSR → RUS approximation)
+    (1984, "USA"),  # Los Angeles
+    (1988, "KOR"),  # Seoul
+    (1992, "ESP"),  # Barcelona
+    (1996, "USA"),  # Atlanta
+    (2000, "AUS"),  # Sydney
+    (2004, "GRC"),  # Athens
+    (2008, "CHN"),  # Beijing
+    (2012, "GBR"),  # London
+    (2016, "BRA"),  # Rio
+    (2020, "JPN"),  # Tokyo (held in 2021)
+    (2024, "FRA"),  # Paris
 ]
 
 host_df = pd.DataFrame(host_data, columns=["year", "iso_code"])
 
 # Merging host data with our dataset
 final_df = final_df.merge(
-   host_df,
-   left_on=["year", "iso_code"],
-   right_on=["year", "iso_code"],
-   how="left",
-   indicator=True
+    host_df,
+    on=["year", "iso_code"],
+    how="left",
+    indicator=True
 )
 
 final_df["host_flag"] = (final_df["_merge"] == "both").astype(int)
 final_df = final_df.drop(columns=["_merge"])
+
+print(f"Final dataset: {len(final_df)} rows, {len(final_df.columns)} columns.")
 
 # Storing data in a relational database, queried using SQL
 
@@ -192,8 +191,11 @@ final_df = final_df.drop(columns=["_merge"])
 os.makedirs(PROCESSED_PATH, exist_ok=True)
 
 conn = sqlite3.connect(os.path.join(PROCESSED_PATH, "olympics.db"))
-final_df.to_sql("olympics_final", conn, if_exists="replace", index=False)
-conn.close()
+try:
+    final_df.to_sql("olympics_final", conn, if_exists="replace", index=False)
+finally:
+    conn.close()
 
 #Saving the final dataset
 final_df.to_csv(os.path.join(PROCESSED_PATH, "final_dataset.csv"), index=False)
+print("Saved final_dataset.csv and olympics.db")
