@@ -1,7 +1,0 @@
-services:
-  pipeline:
-    build: .
-    environment:
-      - JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
-    volumes:
-      - ./data:/app/data
